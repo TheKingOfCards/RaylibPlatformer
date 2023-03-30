@@ -4,13 +4,13 @@ using System.Numerics;
 
 
 
-public class NormalTiles : GameObject
+public class NormalTiles
 {
-    public Rectangle tileRectangle = new Rectangle(0, 0, 60, 60);    
+    public Rectangle rect = new Rectangle(0, 0, 60, 60);    
 
     public NormalTiles(int x, int y)
     {
-        tileRectangle.x = x * 60;
-        tileRectangle.y = y * 60;
+        rect.x = x * 60;
+        rect.y = y * 60;
     }
 }

@@ -10,11 +10,11 @@ Manager m = new();
 int width = 1200;
 int height = 900;
 
-//create window and set target FPS
+//Create window and set target FPS
 Raylib.InitWindow(width, height, "Atle Escapses The Matrix");
 Raylib.SetTargetFPS(60);
 
-
+m.LevelDone();
 
 //play until window is closed
 while(!Raylib.WindowShouldClose())
