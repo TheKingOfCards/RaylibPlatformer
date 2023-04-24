@@ -14,11 +14,11 @@ int height = 900;
 Raylib.InitWindow(width, height, "Atle Escapses The Matrix");
 Raylib.SetTargetFPS(60);
 
-m.LevelDone();
+m.levels.BuildLevel();
 
 //play until window is closed
 while(!Raylib.WindowShouldClose())
 {
-    m.Playing();
     m.Draw();
+    m.Playing();
 }

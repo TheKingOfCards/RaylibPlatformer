@@ -7,22 +7,25 @@ public class Player
 {
     Manager m;
     int moveSpeed = 10;
-    int jumpForce = 20;
+    int jumpForce = 15;
     int fallSpeed = 0;
     int doubleJump = 1;
     int maxWalljumpX = 20;
-    int wallJumpForceX = 10;
-    int wallJumpForceY = 20;
+    int wallJumpForceX = 0;
+    int wallJumpForceY = 17;
     int wallDir = 0; 
     public Rectangle rect = new Rectangle(0, 400, 60, 60);
     public Rectangle groundCheck = new Rectangle(0, 0, 58, 10);
+    public Rectangle roofCheck = new Rectangle(0, 0, 58, 10);
     public Rectangle rightCheck = new Rectangle(0, 0, 30, 50);
     public Rectangle leftCheck = new Rectangle(0, 0, 30, 50);
     bool isGrounded = false;
     bool isRight = false;
     bool isLeft = false;
-    bool hasWalljumped = false;
+    bool hasWalljumpedRight = false;
+    bool hasWalljumpedLeft = false;
     bool stopMovement = false;
+    bool shouldDie = false;
 
 
     public Player(Manager m, int x, int y)
@@ -34,13 +37,16 @@ public class Player
 
     public void Update()
     {
-        //debug only
-        if (Raylib.IsKeyDown(KeyboardKey.KEY_R))
+        //Startscreen code
+        if(m.state == Manager.State.startScreen)
         {
-            moveSpeed = 0;
-            rect.x = Raylib.GetScreenWidth()/2;
-            rect.y = Raylib.GetScreenHeight()/2;
+            if(Raylib.IsKeyPressed(KeyboardKey.KEY_ENTER))
+            {
+                m.state = Manager.State.playing;
+                m.levels.BuildLevel();
+            }
         }
+
         //Checks if the player is tuouching a normal tile
         isGrounded = false;
         isRight = false;
@@ -52,6 +58,11 @@ public class Player
                 rect.y = ob.y - rect.height;
                 isGrounded = true;
             }
+            if(Raylib.CheckCollisionRecs(roofCheck,ob))
+            {
+                rect.y = ob.y + rect.height;
+                fallSpeed = 0;
+            }
             if (Raylib.CheckCollisionRecs(leftCheck, ob))
             {
                 isLeft = true;
@@ -60,6 +71,19 @@ public class Player
             {
                 isRight = true;
             }
+        }
+        //Checks if the player is touching a deathtile
+        foreach(Rectangle ob in m.noNoTiles)
+        {
+            if (Raylib.CheckCollisionRecs(rect, ob))
+            {
+                m.state = Manager.State.dead;
+            }
+        }
+        //Checks if the player is touching the goal
+        if(Raylib.CheckCollisionRecs(rect, m.goal))
+        {
+            m.NewLevel();
         }
 
 
@@ -81,32 +105,34 @@ public class Player
         //Checks if player can walljump
         if (isRight == true || isLeft == true)
         {
-            if (Raylib.IsKeyPressed(KeyboardKey.KEY_LEFT) && isRight == true && isGrounded == false && hasWalljumped == false)
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_LEFT) && isRight == true && isGrounded == false && hasWalljumpedRight == false)
             {
                 wallDir = -1;
-                wallJumpForceX = 10;
+                wallJumpForceX = 5;
                 fallSpeed = -wallJumpForceY;
-                hasWalljumped = true;
+                hasWalljumpedRight = true;
+                hasWalljumpedLeft = false;
                 stopMovement = true;
             }
-            else if (Raylib.IsKeyPressed(KeyboardKey.KEY_RIGHT) && isLeft == true && isGrounded == false && hasWalljumped == false)
+            else if (Raylib.IsKeyPressed(KeyboardKey.KEY_RIGHT) && isLeft == true && isGrounded == false && hasWalljumpedLeft == false)
             {
                 wallDir = 1;
-                wallJumpForceX = 10;
+                wallJumpForceX = 5;
                 fallSpeed = -wallJumpForceY;
-                hasWalljumped = true;
+                hasWalljumpedLeft = true;
+                hasWalljumpedRight = false;
                 stopMovement = true;
             }
-        }else{
-            if(wallJumpForceX != maxWalljumpX)
-            {
-                wallJumpForceX++;
-                rect.x += wallJumpForceX * wallDir;
-            }else
-            {
-                stopMovement = false;
-            }
         }
+        if(wallJumpForceX != maxWalljumpX)
+        {
+            wallJumpForceX++;
+            rect.x += wallJumpForceX * wallDir;
+        }else
+        {
+            stopMovement = false;
+        }
+        
 
 
         //Right to left movement
@@ -125,7 +151,8 @@ public class Player
         {
             fallSpeed = 0;
             doubleJump = 1;
-            hasWalljumped = false;
+            hasWalljumpedRight = false;
+            hasWalljumpedLeft = false;
             //Jumping
             if (Raylib.IsKeyPressed(KeyboardKey.KEY_UP))
             {
@@ -145,10 +172,20 @@ public class Player
                 doubleJump--;
             }
         }
-        // Console.WriteLine(fallSpeed);
         rect.y += fallSpeed;
 
         PlacesChecks();
+
+        
+        //If the player has died
+        if(m.state == Manager.State.dead)
+        {
+            if(Raylib.IsKeyPressed(KeyboardKey.KEY_ENTER))
+            {
+                m.state = Manager.State.playing;
+                m.levels.BuildLevel();
+            }
+        }
     }
 
 
@@ -157,6 +194,9 @@ public class Player
         //Places the checking rectangles on the righ pos
         groundCheck.x = rect.x + 1;
         groundCheck.y = rect.y + 51;
+
+        roofCheck.x = rect.x + 1;
+        roofCheck.y = rect.y - 1;
 
         rightCheck.x = rect.x + 40;
         rightCheck.y = rect.y + 5;
